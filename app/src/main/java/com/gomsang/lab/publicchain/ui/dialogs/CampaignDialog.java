@@ -32,6 +32,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -70,8 +71,12 @@ public class CampaignDialog extends Dialog {
 
         binding.campaignNameTextView.setText(campaignData.getName());
 
-        binding.addressTextView.setText(LocationUtil.getAddressInString(context, new LatLng(campaignData.getLatitude(),
-                campaignData.getLongitude())));
+        if (campaignData.getLatitude() != null && campaignData.getLongitude() != null) {
+            binding.addressTextView.setText(LocationUtil.getAddressInString(context, new LatLng(campaignData.getLatitude(),
+                    campaignData.getLongitude())));
+        } else {
+            binding.addressTextView.setText("주소 정보가 없는 캠페인 입니다.");
+        }
 
         binding.attachImageView.setOnClickListener(view -> CampaignDialog.this.dismiss());
         if (campaignData.getAttachImage() != null) {
@@ -91,9 +96,15 @@ public class CampaignDialog extends Dialog {
             builder.setMessage("이 캠페인을 커뮤니티 토론 채팅에 공유할까요?")
                     .setPositiveButton("네", (dialog, id) -> {
                         Toast.makeText(context, "캠페인이 커뮤니티 채팅에 공유되었습니다", Toast.LENGTH_LONG).show();
-                        ChatMessageData chatMessageData = new ChatMessageData("share",
-                                campaignData.getUuid(),
-                                PublicChainState.getInstance().getCurrentUserData().getUid());
+                        ChatMessageData chatMessageData = new ChatMessageData();
+                        if (campaignData.isInstantCampaign()) {
+                            chatMessageData.setMessageType("share-data");
+                            chatMessageData.setContent(new Gson().toJson(campaignData));
+                        } else {
+                            chatMessageData.setMessageType("share");
+                            chatMessageData.setContent(campaignData.getUuid());
+                        }
+                        chatMessageData.setAuthor(PublicChainState.getInstance().getCurrentUserData().getUid());
                         database.child("chats").child(Constants.CHATCHANNEL_COMMUNITY).child(System.currentTimeMillis() + "").setValue(chatMessageData);
                     })
                     .setNegativeButton("아니요", (dialog, id) -> {

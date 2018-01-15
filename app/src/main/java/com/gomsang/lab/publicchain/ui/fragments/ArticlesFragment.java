@@ -26,7 +26,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -128,8 +131,15 @@ public class ArticlesFragment extends Fragment {
                         .get(i);
 
                 data.setAuthor(body.getProposerKind());
-                data.setDesc("");
+                data.setDesc("내용이 없습니다");
                 data.setFunding(false);
+                try {
+                    data.setSignTime(new SimpleDateFormat("yyyy-MM-dd").parse(body.getProposeDt()).getTime());
+                } catch (ParseException e) {
+                    Log.d("errondate", e.getLocalizedMessage());
+                    e.printStackTrace();
+                }
+                data.setInstantCampaign(true);
                 data.setGoalOfContribution(10.5); //?
                 data.setGoalOfSignature(signature.nextInt(100)); // 목표량 현재 랜덤값
                 data.setName(body.getBillName());

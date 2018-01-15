@@ -21,6 +21,8 @@ public class CampaignData {
 
     private long signTime;
 
+    private boolean isInstantCampaign = false;
+
     public CampaignData() {
     }
 
@@ -110,5 +112,13 @@ public class CampaignData {
 
     public void setGoalOfContribution(double goalOfContribution) {
         this.goalOfContribution = goalOfContribution;
+    }
+
+    public boolean isInstantCampaign() {
+        return isInstantCampaign;
+    }
+
+    public void setInstantCampaign(boolean instantCampaign) {
+        isInstantCampaign = instantCampaign;
     }
 }

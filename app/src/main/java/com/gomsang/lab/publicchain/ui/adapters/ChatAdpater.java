@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class ChatAdpater extends RecyclerView.Adapter<ChatAdpater.ViewHolder> {
                 return TYPE_TEXT;
             }
         }
-        if (chatMessageData.getMessageType().equals("share")) {
+        if (chatMessageData.getMessageType().equals("share") || chatMessageData.getMessageType().equals("share-data")) {
             return TYPE_SHARE;
         }
         return super.getItemViewType(position);
@@ -126,20 +127,30 @@ public class ChatAdpater extends RecyclerView.Adapter<ChatAdpater.ViewHolder> {
             if (binding instanceof ItemChatShareBinding) {
                 ItemChatShareBinding itemChatShareBinding = ((ItemChatShareBinding) binding);
                 getUsernameByUid(chatMessageData.getAuthor(), itemChatShareBinding.infoText, "님이 캠페인을 공유하셨습니다");
-                database.child("campaigns").child(chatMessageData.getContent()).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        itemChatShareBinding.campaignName.setText(dataSnapshot.getValue(CampaignData.class).getName());
-                        itemChatShareBinding.signButton.setOnClickListener(view ->
-                                new CampaignDialog(context, dataSnapshot.getValue(CampaignData.class),
-                                        PublicChainState.getInstance().getCurrentUserData()).show());
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                if (chatMessageData.getMessageType().equals("share")) {
+                    database.child("campaigns").child(chatMessageData.getContent()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            itemChatShareBinding.campaignName.setText(dataSnapshot.getValue(CampaignData.class).getName());
+                            itemChatShareBinding.signButton.setOnClickListener(view ->
+                                    new CampaignDialog(context, dataSnapshot.getValue(CampaignData.class),
+                                            PublicChainState.getInstance().getCurrentUserData()).show());
+                        }
 
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+                if (chatMessageData.getMessageType().equals("share-data")) {
+                    final CampaignData campaignData = new Gson().fromJson(chatMessageData.getContent(), CampaignData.class);
+                    itemChatShareBinding.campaignName.setText(campaignData.getName());
+                    itemChatShareBinding.signButton.setOnClickListener(view ->
+                            new CampaignDialog(context, campaignData,
+                                    PublicChainState.getInstance().getCurrentUserData()).show());
+                }
             }
         }
     }
